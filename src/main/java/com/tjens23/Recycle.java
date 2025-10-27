@@ -2,10 +2,12 @@ package com.tjens23;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.sound.BlockSoundGroup;
@@ -36,5 +38,10 @@ public class Recycle implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Recycle mod initializing with Recycle Chest!");
+
+        // Add to Functional Blocks creative tab
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(content -> {
+            content.add(RECYCLE_CHEST_ITEM);
+        });
     }
 }
