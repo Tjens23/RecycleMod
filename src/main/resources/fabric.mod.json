@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "recycle",
+  "version": "${version}",
+  "name": "Recycle",
+  "description": "A simple recycling mod",
+  "authors": [
+    "btsp"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/recycle/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.tjens23.Recycle"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.4",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
+}
