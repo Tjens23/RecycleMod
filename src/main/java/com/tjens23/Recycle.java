@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
@@ -38,6 +39,20 @@ public class Recycle implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Recycle mod initializing with Recycle Chest!");
+
+        // Register BlockEntityType
+        RecycleChestBlockEntity.RECYCLE_CHEST_BLOCK_ENTITY = Registry.register(
+                Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(MOD_ID, "recycle_chest"),
+                BlockEntityType.Builder.create(RecycleChestBlockEntity::new, RECYCLE_CHEST).build(null)
+        );
+
+        // Register ScreenHandlerType
+        RecycleChestScreenHandler.RECYCLE_CHEST_SCREEN_HANDLER = Registry.register(
+                Registries.SCREEN_HANDLER,
+                new Identifier(MOD_ID, "recycle_chest"),
+                new net.minecraft.screen.ScreenHandlerType<>(RecycleChestScreenHandler::new, null)
+        );
 
         // Add to Functional Blocks creative tab
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(content -> {

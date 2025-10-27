@@ -8,17 +8,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
 
 public class RecycleChestScreenHandler extends ScreenHandler {
 
-    public static final ScreenHandlerType<RecycleChestScreenHandler> RECYCLE_CHEST_SCREEN_HANDLER = Registry.register(
-            Registries.SCREEN_HANDLER,
-            new Identifier(Recycle.MOD_ID, "recycle_chest"),
-            new ScreenHandlerType<>(RecycleChestScreenHandler::new, null)
-    );
+    // Will be set by Recycle.java during initialization
+    public static ScreenHandlerType<RecycleChestScreenHandler> RECYCLE_CHEST_SCREEN_HANDLER;
 
     private final Inventory inventory;
 

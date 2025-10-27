@@ -5,19 +5,15 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.RecipeType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -25,11 +21,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenHandlerFactory, ImplementedInventory {
 
-    public static final BlockEntityType<RecycleChestBlockEntity> RECYCLE_CHEST_BLOCK_ENTITY = Registry.register(
-            Registries.BLOCK_ENTITY_TYPE,
-            new Identifier(Recycle.MOD_ID, "recycle_chest"),
-            BlockEntityType.Builder.create(RecycleChestBlockEntity::new, Recycle.RECYCLE_CHEST).build()
-    );
+    // Will be set by Recycle.java during initialization
+    public static BlockEntityType<RecycleChestBlockEntity> RECYCLE_CHEST_BLOCK_ENTITY;
 
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(27, ItemStack.EMPTY);
 
