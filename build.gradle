@@ -44,7 +44,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 17
 }
 
 java {
@@ -53,14 +53,13 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	// Use Gradle Java Toolchain to target Java 21. This helps Gradle pick or download a matching JDK
-	// regardless of the system default Java runtime.
+	// Use Gradle Java Toolchain to target Java 21 but compile for Java 17 compatibility
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
