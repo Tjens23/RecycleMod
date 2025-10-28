@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=north": {
       "model": "recycle:block/recycle_chest"
+    },
+    "facing=south": {
+      "model": "recycle:block/recycle_chest",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "recycle:block/recycle_chest",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "recycle:block/recycle_chest",
+      "y": 90
     }
   }
 }

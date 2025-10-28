@@ -25,6 +25,8 @@ public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenH
     public static BlockEntityType<RecycleChestBlockEntity> RECYCLE_CHEST_BLOCK_ENTITY;
 
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(27, ItemStack.EMPTY);
+    private int tickCounter = 0;
+    private static final int RECYCLE_DELAY = 40; // 2 seconds at 20 ticks per second
 
     public RecycleChestBlockEntity(BlockPos pos, BlockState state) {
         super(RECYCLE_CHEST_BLOCK_ENTITY, pos, state);
@@ -50,16 +52,25 @@ public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenH
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
         Inventories.writeNbt(nbt, inventory);
+        nbt.putInt("TickCounter", tickCounter);
     }
 
     @Override
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
         Inventories.readNbt(nbt, inventory);
+        tickCounter = nbt.getInt("TickCounter");
     }
 
     public static void tick(World world, BlockPos pos, BlockState state, RecycleChestBlockEntity blockEntity) {
         if (world.isClient) return;
+
+        blockEntity.tickCounter++;
+        
+        // Only process recycling every RECYCLE_DELAY ticks (2 seconds)
+        if (blockEntity.tickCounter < RECYCLE_DELAY) return;
+        
+        blockEntity.tickCounter = 0;
 
         // Check each slot for items to recycle
         for (int i = 0; i < blockEntity.inventory.size(); i++) {
@@ -69,6 +80,7 @@ public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenH
                 // Try to recycle this item
                 if (blockEntity.recycleItem(i, stack, world, pos)) {
                     blockEntity.markDirty();
+                    break; // Only recycle one item per tick cycle
                 }
             }
         }
@@ -81,7 +93,8 @@ public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenH
             CraftingRecipe recipe = entry.value();
             ItemStack output = recipe.getResult(world.getRegistryManager());
 
-            if (output.getItem().equals(stack.getItem())) {
+            // Check if this recipe produces the item we want to recycle
+            if (ItemStack.areItemsEqual(output, stack)) {
                 found = entry;
                 break;
             }
@@ -92,42 +105,91 @@ public class RecycleChestBlockEntity extends BlockEntity implements NamedScreenH
         }
 
         CraftingRecipe recipe = found.value();
-        int outputCount = recipe.getResult(world.getRegistryManager()).getCount();
+        ItemStack output = recipe.getResult(world.getRegistryManager());
+        int outputCount = output.getCount();
+        
+        // Calculate how many times we can recycle based on input stack
         int times = stack.getCount() / outputCount;
-
         if (times <= 0) return false;
 
-        // Get ingredients
+        // Get ingredients and spawn them in the world
         DefaultedList<Ingredient> ingredients = recipe.getIngredients();
+        boolean successfullyRecycled = false;
 
-        // Spawn ingredients in the world
-        for (Ingredient ing : ingredients) {
-            ItemStack[] matches = ing.getMatchingStacks();
-            if (matches == null || matches.length == 0) continue;
+        for (Ingredient ingredient : ingredients) {
+            if (ingredient.isEmpty()) continue;
+            
+            ItemStack[] matches = ingredient.getMatchingStacks();
+            if (matches.length == 0) continue;
 
+            // Use the first matching stack as the ingredient to give back
             ItemStack toGive = matches[0].copy();
-            if (toGive.isEmpty()) continue;
-
             toGive.setCount(toGive.getCount() * times);
 
-            // Spawn item entity above the chest
-            ItemEntity itemEntity = new ItemEntity(
-                    world,
-                    pos.getX() + 0.5,
-                    pos.getY() + 1.0,
-                    pos.getZ() + 0.5,
-                    toGive
-            );
-            itemEntity.setVelocity(0, 0.1, 0);
-            world.spawnEntity(itemEntity);
+            // Try to insert into existing slots first, otherwise spawn in world
+            if (!tryInsertIntoInventory(toGive)) {
+                spawnItemInWorld(toGive, world, pos);
+            }
+            
+            successfullyRecycled = true;
         }
 
-        // Remove the item from the slot
-        inventory.set(slot, ItemStack.EMPTY);
+        if (successfullyRecycled) {
+            // Remove the recycled items from the slot
+            int newCount = stack.getCount() - (times * outputCount);
+            if (newCount <= 0) {
+                inventory.set(slot, ItemStack.EMPTY);
+            } else {
+                stack.setCount(newCount);
+            }
 
-        Recycle.LOGGER.info("Recycled {} x{} in Recycle Chest at {}",
-                stack.getItem().toString(), times, pos);
+            Recycle.LOGGER.info("Recycled {} x{} in Recycle Chest at {}", 
+                    stack.getItem().toString(), times, pos);
+        }
 
-        return true;
+        return successfullyRecycled;
+    }
+
+    private boolean tryInsertIntoInventory(ItemStack stack) {
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack slotStack = inventory.get(i);
+            
+            if (slotStack.isEmpty()) {
+                inventory.set(i, stack.copy());
+                return true;
+            } else if (ItemStack.canCombine(slotStack, stack)) {
+                int maxStackSize = Math.min(stack.getMaxCount(), slotStack.getMaxCount());
+                int availableSpace = maxStackSize - slotStack.getCount();
+                
+                if (availableSpace > 0) {
+                    int toAdd = Math.min(availableSpace, stack.getCount());
+                    slotStack.increment(toAdd);
+                    stack.decrement(toAdd);
+                    
+                    if (stack.isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void spawnItemInWorld(ItemStack stack, World world, BlockPos pos) {
+        if (stack.isEmpty()) return;
+        
+        ItemEntity itemEntity = new ItemEntity(
+                world,
+                pos.getX() + 0.5,
+                pos.getY() + 1.0,
+                pos.getZ() + 0.5,
+                stack
+        );
+        itemEntity.setVelocity(
+                (world.random.nextDouble() - 0.5) * 0.1,
+                0.2,
+                (world.random.nextDouble() - 0.5) * 0.1
+        );
+        world.spawnEntity(itemEntity);
     }
 }
